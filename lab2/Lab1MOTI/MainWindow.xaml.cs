@@ -434,11 +434,11 @@ namespace Lab1MOTI
 
                     bool result = CompareAlternatives(alternatives[i].AlternativeId, alternatives[j].AlternativeId);
 
-                    string message = $"Expert Comparison Tool\n\n" +
+                    string message = $"Expert Comparison Tool (Minimization Concept)\n\n" +
                                      $"Option A: {alternatives[i].AlternativeName}\n" +
                                      $"Option B: {alternatives[j].AlternativeName}\n\n" +
-                                     $"System recommendation: Option A is {(result ? "BETTER or EQUAL to" : "WORSE than")} Option B.\n\n" +
-                                     $"Does Option A outperform (or equal) to Option B on your opinion?";
+                                     $"Is Option A STRICTLY LESS (worse/smaller) than Option B?\n" +
+                                     $"(Algorithm suggests: {(result ? "YES" : "NO")})";
 
                     var dialogResult = MessageBox.Show(message, "Expert Decision Support", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
@@ -490,12 +490,12 @@ namespace Lab1MOTI
                 }
             }
 
-            return total1 >= total2;
+            return total1 < total2;
         }
 
         private void SaveResultsToDb(LPR lpr, Dictionary<int, int> winCounts)
         {
-            var sortedByScore = winCounts.OrderByDescending(x => x.Value).ToList();
+            var sorted = winCounts.OrderBy(x => x.Value).ToList();
 
             var oldResults = _context.Results.Where(r => r.LPRId == lpr.LPRId).ToList();
             if (oldResults.Any())
@@ -503,16 +503,15 @@ namespace Lab1MOTI
                 _context.Results.RemoveRange(oldResults);
             }
 
-            for (int i = 0; i < sortedByScore.Count; i++)
+            for (int i = 0; i < sorted.Count; i++)
             {
-                var resultRecord = new Result
+                _context.Results.Add(new Result
                 {
                     LPRId = lpr.LPRId,
-                    LPRRange = lpr.LPRRange, 
-                    AlternativeId = sortedByScore[i].Key,
+                    LPRRange = lpr.LPRRange,
+                    AlternativeId = sorted[i].Key,
                     AlternativeRange = i + 1 
-                };
-                _context.Results.Add(resultRecord);
+                });
             }
 
             _context.SaveChanges();
