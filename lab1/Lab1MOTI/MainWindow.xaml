@@ -7,11 +7,20 @@
             <TabItem Header="LPR">
                 <StackPanel Margin="10">
                     <DataGrid x:Name="dgLRP" AutoGenerateColumns="True" Height="200" SelectionMode="Single"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,10">
-                        <Button Content="Add LPR" Click="AddLpr_Click" Width="50" Margin="2"/>
-                        <Button Content="Edit" Click="EditLpr_Click" Margin="2" Width="50"/>
-                        <Button Content="Delete" Click="DeleteLpr_Click" Margin="2" Width="50" Background="Tomato"/>
-                    </StackPanel>
+                    <DockPanel Margin="0,10" LastChildFill="False">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                            <Button Content="Add LPR" Click="AddLpr_Click" Width="50" Margin="2"/>
+                            <Button Content="Edit" Click="EditLpr_Click" Margin="2" Width="50"/>
+                            <Button Content="Delete" Click="DeleteLpr_Click" Margin="2" Width="50" Background="Tomato"/>
+                        </StackPanel>
+                        <Button Content="Do Evaluation" 
+                            Click="DoEvaluation_Click" 
+                            DockPanel.Dock="Right" 
+                            Margin="2" 
+                            Background="LightBlue" 
+                            FontWeight="Bold" 
+                            Padding="10,2"/>
+                    </DockPanel>
                 </StackPanel>
             </TabItem>
 
@@ -59,6 +68,7 @@
                         <Button Content="Add Mark" Click="AddVector_Click" Margin="2"/>
                         <Button Content="Edit" Click="EditVector_Click" Margin="2"/>
                         <Button Content="Delete" Click="DeleteVector_Click" Margin="2" Background="Tomato"/>
+                    
                     </StackPanel>
                 </StackPanel>
             </TabItem>
@@ -74,13 +84,31 @@
                             <DataGridTextColumn Header="Alternative Range" Binding="{Binding AlternativeRange}" Width="120"/>
                         </DataGrid.Columns>
                     </DataGrid>
-                    <StackPanel Orientation="Horizontal" Margin="0,10">
-                        <Button Content="Add Result" Click="AddResult_Click" Margin="2"/>
-                        <Button Content="Edit" Click="EditResult_Click" Margin="2"/>
-                        <Button Content="Delete" Click="DeleteResult_Click" Margin="2" Background="Tomato"/>
-                    </StackPanel>
-
+                    <DockPanel Margin="0,10" LastChildFill="False">
+                        <StackPanel Orientation="Horizontal" Width="400" DockPanel.Dock="Left">
+                            <Button Content="Add Result" Click="AddResult_Click" Margin="2"/>
+                            <Button Content="Edit" Click="EditResult_Click" Margin="2"/>
+                            <Button Content="Delete" Click="DeleteResult_Click" Margin="2" Background="Tomato"/>
+                        </StackPanel>
+                        <Button Content="View Voting Profile" 
+                             Click="viewVoting_Click" 
+                             DockPanel.Dock="Right" 
+                             Margin="2" 
+                             Background="LightSeaGreen" 
+                             FontWeight="Bold" 
+                             Foreground="White"
+                             Padding="8,5"/>
+                    </DockPanel>
+                    <GroupBox Header="Матриця суміжності" Margin="5">
+                        <DataGrid x:Name="dgMatrix" 
+                          AutoGenerateColumns="True" 
+                          IsReadOnly="True" 
+                          HeadersVisibility="All" 
+                          FontSize="14"
+                          AlternatingRowBackground="GhostWhite"/>
+                    </GroupBox>
                 </StackPanel>
+                
             </TabItem>
         </TabControl>
     </Grid>

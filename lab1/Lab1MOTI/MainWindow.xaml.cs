@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
+using System.Data;
 using System.Windows.Shapes;
 using System.Xml.Linq;
 
@@ -170,7 +171,29 @@ namespace Lab1MOTI
                 _context.SaveChanges();
             }
         }
+        private string ConvertMark(string input)
+        {
+            string normalized = input.Trim().ToLower();
 
+            var qualitativeMap = new Dictionary<string, string>
+            {
+                { "найвища", "10" },
+                { "дуже висока", "9" },
+                { "висока", "8" },
+                { "вище середньої", "7" },
+                { "середня", "6" },
+                { "задовільна", "5" },
+                { "низька", "4" },
+                { "дуже низька", "2" }
+            };
+
+            if (qualitativeMap.ContainsKey(normalized))
+            {
+                return qualitativeMap[normalized];
+            }
+
+            return input;
+        }
         private void AddVector_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new EditDialog();
@@ -198,15 +221,17 @@ namespace Lab1MOTI
             {
                 var alt = dialog.cbFirst.SelectedItem as Alternative;
                 var crit = dialog.cbSecond.SelectedItem as Criterion;
-                string mark = dialog.txtSecond.Text;
+                string rawMark = dialog.txtSecond.Text;
 
-                if (alt != null && crit != null && !string.IsNullOrWhiteSpace(mark))
+                if (alt != null && crit != null && !string.IsNullOrWhiteSpace(rawMark))
                 {
+                    string finalMark = ConvertMark(rawMark);
+
                     _context.Vectors.Add(new Vector
                     {
                         AlternativeId = alt.AlternativeId,
                         CriterionId = crit.CriterionId,
-                        Mark = mark
+                        Mark = finalMark
                     });
                     _context.SaveChanges();
                 }
@@ -245,13 +270,13 @@ namespace Lab1MOTI
                 {
                     selected.AlternativeId = (dialog.cbFirst.SelectedItem as Alternative).AlternativeId;
                     selected.CriterionId = (dialog.cbSecond.SelectedItem as Criterion).CriterionId;
-                    selected.Mark = dialog.txtSecond.Text;
+                    selected.Mark = ConvertMark(dialog.txtSecond.Text);
                     _context.SaveChanges();
                     dgVectors.Items.Refresh();
                 }
             }
         }
-
+     
         private void DeleteVector_Click(object sender, RoutedEventArgs e)
         {
             if (dgVectors.SelectedItem is Vector selected)
@@ -389,5 +414,140 @@ namespace Lab1MOTI
             }
         }
 
+        public void DoEvaluation_Click(object sender, RoutedEventArgs e)
+        {
+            GeneratePairMatrix();
+        }
+        private void GeneratePairMatrix()
+        {
+            var lpr = dgLRP.SelectedItem as LPR;
+            if (lpr == null)
+            {
+                MessageBox.Show("Choose LPR first!");
+                return;
+            }
+
+            var alternatives = _context.Alternatives.ToList();
+            int n = alternatives.Count;
+            int[,] matrix = new int[n, n];
+
+            
+            var winCounts = alternatives.ToDictionary(a => a.AlternativeId, a => 0);
+
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Alternative", typeof(string));
+
+            for (int k = 0; k < n; k++)
+            {
+                dt.Columns.Add($"A{k + 1}", typeof(int));
+            };
+
+            for (int i = 0; i < n; i++)
+            {
+                DataRow dr = dt.NewRow();
+                dr[0] = alternatives[i].AlternativeName;
+
+                for (int j = 0; j < n; j++)
+                {
+                    if (i == j)
+                    {
+                        matrix[i, j] = 1;
+                        dr[j + 1] = 1;
+                        continue;
+                    }
+
+                    bool result = CompareAlternatives(alternatives[i].AlternativeId, alternatives[j].AlternativeId);
+
+                    string message = $"Expert Comparison Tool\n\n" +
+                                     $"Option A: {alternatives[i].AlternativeName}\n" +
+                                     $"Option B: {alternatives[j].AlternativeName}\n\n" +
+                                     $"Is Option A WORSE than Option B?\n" +
+                                     $"(Algorithm suggests: {(result ? "YES" : "NO")})";
+
+                    var dialogResult = MessageBox.Show(message, "Expert Decision Support", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+                    bool finalDecision = (dialogResult == MessageBoxResult.Yes);
+
+                    matrix[i, j] = finalDecision ? 1 : 0;
+                    dr[j + 1] = matrix[i, j];
+
+                    if (finalDecision) winCounts[alternatives[i].AlternativeId]++;
+                }
+                dt.Rows.Add(dr);
+            }
+
+            dgMatrix.ItemsSource = dt.DefaultView;
+            SaveResultsToDb(lpr, winCounts);
+        }
+
+        private bool CompareAlternatives(int id1, int id2)
+        {
+            var marks1 = _context.Vectors.Where(v => v.AlternativeId == id1).ToList();
+            var marks2 = _context.Vectors.Where(v => v.AlternativeId == id2).ToList();
+
+            var weights = new Dictionary<string, double>
+            {
+                {"Час проходження маршруту",0.25 },
+                {"Кількість зіткнень",0.3 },
+                {"Ресурсна вартість", 0.15 },
+                {"Стабільність поведінки", 0.2 },
+                {"Складність реалізації", 0.1 }
+            };
+            double total1 = 0.0;
+            double total2 = 0.0;
+
+            foreach (var mark in marks1)
+            {
+                var criterion = _context.Criterion.Find(mark.CriterionId);
+                if (criterion != null && weights.ContainsKey(criterion.CriterionName))
+                {
+                    total1 += double.Parse(mark.Mark) * weights[criterion.CriterionName];
+                }
+            }
+
+            foreach (var mark in marks2)
+            {
+                var criterion = _context.Criterion.Find(mark.CriterionId);
+                if (criterion != null && weights.ContainsKey(criterion.CriterionName))
+                {
+                    total2 += double.Parse(mark.Mark) * weights[criterion.CriterionName];
+                }
+            }
+
+            return total1 < total2;
+        }
+
+        private void SaveResultsToDb(LPR lpr, Dictionary<int, int> winCounts)
+        {
+            var sorted = winCounts.OrderBy(x => x.Value).ToList();
+
+            var oldResults = _context.Results.Where(r => r.LPRId == lpr.LPRId).ToList();
+            if (oldResults.Any())
+            {
+                _context.Results.RemoveRange(oldResults);
+            }
+
+            for (int i = 0; i < sorted.Count; i++)
+            {
+                _context.Results.Add(new Result
+                {
+                    LPRId = lpr.LPRId,
+                    LPRRange = lpr.LPRRange,
+                    AlternativeId = sorted[i].Key,
+                    AlternativeRange = i + 1 
+                });
+            }
+
+            _context.SaveChanges();
+
+            dgResults.Items.Refresh();
+            MessageBox.Show("Ranking complete! Results have been saved to the database.", "Success");
+        }
+
+        private void viewVoting_Click(object sender, EventArgs e)
+        {
+            VotingProfile window = new VotingProfile();
+            window.Show();
+        }
     }
 }

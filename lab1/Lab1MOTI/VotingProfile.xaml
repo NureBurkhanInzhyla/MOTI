@@ -1,0 +1,46 @@
+﻿<Window x:Class="Lab1MOTI.VotingProfile"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Lab1MOTI"
+        mc:Ignorable="d"
+        Title="VotingProfile" Height="450" Width="800">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,15">
+            <TextBlock Text="Voting Profile of LPR" FontSize="20" FontWeight="Bold" Foreground="#2C3E50"/>
+        </StackPanel>
+
+        <GroupBox Grid.Row="1" Padding="5">
+            <DataGrid x:Name="dgVotingProfile" 
+                      AutoGenerateColumns="True" 
+                      IsReadOnly="True" 
+                      FontSize="14"
+                      AlternatingRowBackground="GhostWhite"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="All"
+                      BorderBrush="#BDC3C7"/>
+        </GroupBox>
+
+        <StackPanel Grid.Row="2" Margin="0,15,0,0" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="btnCondorcet" Content="Метод Кондорсе" 
+            Padding="10,5" Background="#2980B9" Foreground="White" 
+            FontWeight="Bold" Click="btnCondorcet_Click" Margin="0,0,10,0"/>
+
+            <Button x:Name="btnCopeland" Content="Метод Копленда" 
+            Padding="10,5" Background="#27AE60" Foreground="White" 
+            FontWeight="Bold" Click="btnCopeland_Click" Margin="0,0,10,0"/>
+
+            
+        </StackPanel>
+
+        <TextBlock x:Name="txtResult" Grid.Row="2" HorizontalAlignment="Left" 
+           VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold" Foreground="#2C3E50" Margin="5,0,0,0"/>
+    </Grid>
+</Window>

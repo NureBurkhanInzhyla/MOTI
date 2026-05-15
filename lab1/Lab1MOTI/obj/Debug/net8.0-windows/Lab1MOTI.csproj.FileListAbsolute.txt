@@ -80,3 +80,5 @@ C:\Users\ingil\source\repos\Lab1MOTI\obj\Debug\net8.0-windows\ref\Lab1MOTI.dll
 C:\Users\ingil\source\repos\Lab1MOTI\obj\Debug\net8.0-windows\EditDialog.g.cs
 C:\Users\ingil\source\repos\Lab1MOTI\obj\Debug\net8.0-windows\Lab1MOTI_MarkupCompile.lref
 C:\Users\ingil\source\repos\Lab1MOTI\obj\Debug\net8.0-windows\EditDialog.baml
+C:\Users\ingil\source\repos\Lab1MOTI\obj\Debug\net8.0-windows\VotingProfile.g.cs
+C:\Users\ingil\source\repos\Lab1MOTI\obj\Debug\net8.0-windows\VotingProfile.baml
